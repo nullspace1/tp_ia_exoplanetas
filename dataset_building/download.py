@@ -5,8 +5,6 @@ import pandas as pd
 import zipfile
 import lightkurve as lk
 
-
-
 def download_main_dataset():
     config : dict = json.load(open("config.json"))
     
@@ -25,26 +23,33 @@ def download_main_dataset():
     
     return df
 
-def download_light_curves(kepler_id : str):
+def download_raw_light_curve(kepler_id : str):
     lc = lk.search_lightcurve(f"KIC {kepler_id}").download_all(flux_column="pdcsap_flux")
     return lc
 
-def basic_preprocessing(light_curve : lk.lightcurve.LightCurve):
+def apply_preprocessing(light_curve : lk.lightcurve.LightCurve):
     normalized : lk.lightcurve.LightCurve = (light_curve.
                                              remove_nans().
                                              remove_outliers().
                                              normalize()
                                              )
     return normalized
-    
-df :  pd.DataFrame = download_main_dataset()
 
-for kepler_id in df["kepid"]:
-    results = download_light_curves(kepler_id)
-    if results is not None and isinstance(results, lk.LightCurveCollection) and len(results) > 0:
-        lc : lk.lightcurve.LightCurve = results.stitch()
-        lc   = basic_preprocessing(lc)
-        lc_table = lc.to_pandas()
-        lc_table["time"] = lc.time.value
-        lc_table = lc_table.filter(['time','flux','flux_err'])
-        lc_table.to_csv(f"data/{kepler_id}.csv", index=False)
+def download_processed_light_curve(kepler_id : str):
+    lc = lk.search_lightcurve(f"KIC {kepler_id}").download_all(flux_column="pdcsap_flux")
+    lc = apply_preprocessing(lc)
+    return lc
+
+if __name__ == "__main__":
+    
+    df :  pd.DataFrame = download_main_dataset()
+
+    for kepler_id in df["kepid"]:
+        results = download_raw_light_curve(kepler_id)
+        if results is not None and isinstance(results, lk.LightCurveCollection) and len(results) > 0:
+            lc : lk.lightcurve.LightCurve = results.stitch()
+            lc   = apply_preprocessing(lc)
+            lc_table = lc.to_pandas()
+            lc_table["time"] = lc.time.value
+            lc_table = lc_table.filter(['time','flux','flux_err'])
+            lc_table.to_csv(f"data/{kepler_id}.csv", index=False)
