@@ -1,5 +1,6 @@
 {
     "username":"lmoiano",
     "key":"a3a642d70ff10679a66eb73c8a0333c5",
-    "dataset_name": "nasa/kepler-exoplanet-search-results"
+    "dataset_name": "nasa/kepler-exoplanet-search-results",
+    "secondary_dataset_path": "resources/estrellas_cleaned.txt"
 }
