@@ -7,7 +7,7 @@ class FiLMVector(nn.Module):
         self.mlp = nn.Sequential(
             nn.Linear(cond_dim, hidden),
             nn.ReLU(),
-            nn.Linear(hidden, 2 * feat_dim)  # -> [gamma | beta]
+            nn.Linear(hidden, 2 * feat_dim)
         )
         self.feat_dim = feat_dim
 
@@ -16,9 +16,9 @@ class FiLMVector(nn.Module):
         x:    (batch, feat_dim)         latent/features
         cond: (batch, cond_dim)         conditioning params
         """
-        gb = self.mlp(cond)              # (batch, 2*feat_dim)
-        gamma, beta = gb.chunk(2, dim=1) # (batch, feat_dim) each
-        return gamma * x + beta          # FiLM: feature-wise scale/shift
+        gb = self.mlp(cond)
+        gamma, beta = gb.chunk(2, dim=1)
+        return gamma * x + beta
 
 
 class LightCurveProcessorFiLM(nn.Module):
