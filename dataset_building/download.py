@@ -58,7 +58,6 @@ if __name__ == "__main__":
     exoplanet_df :  pd.DataFrame = download_main_dataset()
     no_exoplanet_df : pd.DataFrame = download_secondary_dataset()
     
-    print(exoplanet_df.columns)
     
     no_exoplanet_df = no_exoplanet_df[no_exoplanet_df["nconfp"] == 0]
     
@@ -73,7 +72,6 @@ if __name__ == "__main__":
     no_exoplanet_lookup_table.loc[:, "koi_duration"] = 0
     no_exoplanet_lookup_table.loc[:, "koi_disposition"] = "NEGATIVE"
     
-    ## Select TOTAL_ENTRIES random samples from both tables
     exoplanet_lookup_table = exoplanet_lookup_table.sample(n=TOTAL_ENTRIES, random_state=42)
     no_exoplanet_lookup_table = no_exoplanet_lookup_table.sample(n=TOTAL_ENTRIES, random_state=42)
     
