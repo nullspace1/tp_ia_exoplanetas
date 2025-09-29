@@ -61,7 +61,7 @@ def download_processed_light_curve(kepler_id : str):
     lc = apply_preprocessing(lc)
     return lc
 
-def process_planets_with_exoplanets(config, download_raw_light_curve, apply_preprocessing, exoplanet_df):
+def process_planets_with_exoplanets(exoplanet_df):
     for _, row in exoplanet_df.iterrows():
         kepler_id = int(row["kepid"])
         
@@ -72,20 +72,12 @@ def process_planets_with_exoplanets(config, download_raw_light_curve, apply_prep
             continue
 
         if results is not None and isinstance(results, lk.LightCurveCollection) and len(results) > 0:
-            lc: lk.lightcurve.LightCurve = results.stitch()
-            lc = apply_preprocessing(lc)
-            lc_table = lc.to_pandas()
-            lc_table["time"] = lc.time.value
-            lc_table = lc_table.filter(["time", "flux"])
-
-            os.makedirs("data/light_curves/positive", exist_ok=True)
-            base_path = f"data/light_curves/positive/{kepler_id}.csv"
-            lc_table.to_csv(base_path, index=False)
+            
+            lc_df = get_lightcurve_as_df(results)
+            save_df(kepler_id, lc_df)
 
             candidates = exoplanet_df[exoplanet_df["kepid"] == kepler_id]
-            
-            n_bins = config["model_resolution"]
-            bins = np.linspace(-0.5, 0.5, n_bins+1)
+            bins = np.linspace(-0.5, 0.5, config["model_resolution"]+1)
              
             candidates_dict = {
                 "candidate_count": len(candidates),
@@ -121,7 +113,20 @@ def process_planets_with_exoplanets(config, download_raw_light_curve, apply_prep
         else:
             print(f"[WARN] No light curve found for {kepler_id}")
 
-def process_planets_with_no_exoplanets(download_raw_light_curve, apply_preprocessing, no_exoplanet_df):
+def save_df(kepler_id, lc_df):
+    os.makedirs("data/light_curves/positive", exist_ok=True)
+    base_path = f"data/light_curves/positive/{kepler_id}.csv"
+    lc_df.to_csv(base_path, index=False)
+
+def get_lightcurve_as_df(results):
+    lc: lk.lightcurve.LightCurve = results.stitch()
+    lc = apply_preprocessing(lc)
+    lc_table = lc.to_pandas()
+    lc_table["time"] = lc.time.value
+    lc_table = lc_table.filter(["time", "flux"])
+    return lc_table
+
+def process_planets_with_no_exoplanets(no_exoplanet_df):
     for _, row in no_exoplanet_df.iterrows():
         kepler_id = int(row["kepid"])
         try:
@@ -132,15 +137,8 @@ def process_planets_with_no_exoplanets(download_raw_light_curve, apply_preproces
 
         if results is not None and isinstance(results, lk.LightCurveCollection) and len(results) > 0:
             
-            lc: lk.lightcurve.LightCurve = results.stitch()
-            lc = apply_preprocessing(lc)
-            lc_table = lc.to_pandas()
-            lc_table["time"] = lc.time.value
-            lc_table = lc_table.filter(["time", "flux"])
-            
-            os.makedirs("data/light_curves/negative/", exist_ok=True)
-            
-            lc_table.to_csv(f"data/light_curves/negative/{kepler_id}.csv", index=False)
+            lc_df = get_lightcurve_as_df(results)
+            save_df(kepler_id, lc_df)
             
             modeled_path = f"data/light_curves/negative/{kepler_id}.json"
             dict_to_save = {
@@ -162,6 +160,6 @@ if __name__ == "__main__":
     exoplanet_df.to_csv("data/candidates.csv", index=False)
     no_exoplanet_df.to_csv("data/no_candidates.csv", index=False)
     
-    process_planets_with_exoplanets(config, download_raw_light_curve, apply_preprocessing, exoplanet_df)
+    process_planets_with_exoplanets(exoplanet_df)
             
-    process_planets_with_no_exoplanets(download_raw_light_curve, apply_preprocessing, no_exoplanet_df)
+    process_planets_with_no_exoplanets(no_exoplanet_df)
