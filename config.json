@@ -3,7 +3,12 @@
     "key":"a3a642d70ff10679a66eb73c8a0333c5",
     "dataset_name": "nasa/kepler-exoplanet-search-results",
     "secondary_dataset_path": "resources/estrellas_cleaned.txt",
-    "positive_sample_count": 900,
+    "positive_sample_count": 450,
     "negative_sample_count": 450,
-    "model_resolution": 200
+    "distribution_params": {
+        "bins": 100,
+        "period": {"min": 1, "max": 365},
+        "duration": {"min": 1, "max": 20}
+    },
+    "lightcurve_size": 65000
 }
