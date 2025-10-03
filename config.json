@@ -2,13 +2,19 @@
     "username":"lmoiano",
     "key":"a3a642d70ff10679a66eb73c8a0333c5",
     "dataset_name": "nasa/kepler-exoplanet-search-results",
-    "secondary_dataset_path": "resources/estrellas_cleaned.txt",
-    "positive_sample_count": 450,
-    "negative_sample_count": 450,
+    "star_catalog_files": "resources/estrellas_cleaned.txt",
+    "positive_sample_count": 500,
+    "negative_sample_count": 1000,
+    "synthetic_sample_count": 250,
+    "period_filter": 40,
     "distribution_params": {
-        "bins": 100,
-        "period": {"min": 1, "max": 365},
-        "duration": {"min": 1, "max": 20}
+        "period": {"min": 1, "max": 40,"bins": 100},
+        "duration": {"min": 1, "max": 20, "bins": 100}
     },
-    "lightcurve_size": 65000
+    "max_period_length": 40,
+    "lightcurve_length": 1500,
+    "min_lightcurve_length": 1000,
+    "positive": "data/samples/positive",
+    "negative": "data/samples/negative",
+    "synthetic": "data/samples/synthetic"
 }
