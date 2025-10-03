@@ -13,7 +13,6 @@ class StarDataset:
     min_lightcurve_length: int
     save_path: str
     period: dict
-    duration: dict
     
     def __init__(self, config, path_key):
         self.df = self.get_dataset(config)
@@ -26,39 +25,28 @@ class StarDataset:
             "max": config["distribution_params"]["period"]["max"],
             "bins": config["distribution_params"]["period"]["bins"]
         }
-        self.duration = {
-            "min": config["distribution_params"]["duration"]["min"],
-            "max": config["distribution_params"]["duration"]["max"],
-            "bins": config["distribution_params"]["duration"]["bins"]
-        }
-        
+
     def get_dataset(self, config) -> pd.DataFrame:
         pass
     
     def get_period_distribution(self, kepler_id : str) -> np.ndarray:
-        return self.get_distribution(kepler_id, self.period, "period")
-    
-    def get_duration_distribution(self, kepler_id : str) -> np.ndarray:
-        return self.get_distribution(kepler_id, self.duration, "duration")
-    
-    def get_distribution(self, kepler_id : str, variable : dict, variable_name : str) -> np.ndarray:
         planets = self.df[self.df["id"] == kepler_id]
         
-        weights = np.zeros(variable["bins"])
-        values = np.linspace(variable["min"], variable["max"], variable["bins"]) 
+        weights = np.zeros(self.period["bins"])
+        values = np.linspace(self.period["min"], self.period["max"], self.period["bins"])
         
         for _, row in planets.iterrows():
-            variable_value = row[variable_name]
-            variable_error = row[f"{variable_name}_error"]
+            period_value = row["period"]
+            period_error = row["period_error"]
             
-            weights_to_add = np.zeros(variable["bins"])
+            weights_to_add = np.zeros(self.period["bins"])
             
-            min_value = np.min((values-variable_value)**2/(variable_error)**2)
-            if ((min_value > 100) == np.True_ or variable_error == 0):
-                close_value = np.min(np.abs(values - variable_value))
-                weights_to_add = np.exp(-(values-variable_value)**2/(close_value)**2)
+            min_value = np.min((values-period_value)**2/(period_error)**2)
+            if ((min_value > 100) == np.True_ or period_error == 0):
+                close_value = np.min(np.abs(values - period_value))
+                weights_to_add = np.exp(-(values-period_value)**2/(close_value)**2)
             else:
-                weights_to_add = np.exp(-(values-variable_value)**2/(variable_error)**2)
+                weights_to_add = np.exp(-(values-period_value)**2/(period_error)**2)
 
             weights_to_add = weights_to_add/np.sum(weights_to_add)
             weights = np.minimum(1, weights + weights_to_add)
@@ -147,8 +135,7 @@ class StarDataset:
                 continue
             lightcurve_array = self.lightcurve_to_numpy(lightcurve)
             period_distribution = self.get_period_distribution(kepler_id)
-            duration_distribution = self.get_duration_distribution(kepler_id)
-            self.save_array(f"{kepler_id}", (lightcurve_array, period_distribution, duration_distribution))
+            self.save_array(f"{kepler_id}", (lightcurve_array, period_distribution))
             successful_downloads += 1
             download_count += 1
             if download_count % 20 == 0:
