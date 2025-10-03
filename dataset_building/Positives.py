@@ -42,33 +42,3 @@ class Positives(StarDataset):
 
         
         return df[df["period"] < self.period_filter]
-    
-    def get_distribution(self,kepler_id : str ,variable : dict , variable_name : str):
-        planets = self.df[self.df["id"] == kepler_id]
-        
-        weights = np.zeros(variable["bins"])
-        values = np.linspace(variable["min"], variable["max"], variable["bins"]) 
-        for _, row in planets.iterrows():
-            variable_value = row[variable_name]
-            variable_error = row[f"{variable_name}_error"]
-            
-            weights_to_add = np.zeros(variable["bins"])
-            
-            min_value = np.min((values-variable_value)**2/(variable_error)**2)
-            if ((min_value > 100) == np.True_):
-                close_value = np.min(np.abs(values - variable_value))
-                weights_to_add= np.exp(-(values-variable_value)**2/(close_value)**2)
-            else:
-                weights_to_add = np.exp(-(values-variable_value)**2/(variable_error)**2)
-
-            weights_to_add = weights_to_add/np.sum(weights_to_add)
-            weights = np.minimum(1, weights + weights_to_add)
-        
-        return weights
-    
-    def get_period_distribution(self, kepler_id: str) -> ndarray:
-        return self.get_distribution(kepler_id, self.period, "period")
-    
-    def get_duration_distribution(self, kepler_id: str) -> ndarray:
-        return self.get_distribution(kepler_id, self.duration, "duration")
-        

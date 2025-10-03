@@ -18,7 +18,8 @@ class Negatives(StarDataset):
         return df
         
     def get_period_distribution(self, kepler_id : str):
-        return np.zeros(self.period.bins)
+        return np.zeros(self.period["bins"])
         
     def get_duration_distribution(self, kepler_id : str):
-        return np.zeros(self.duration.bins)
+        return np.zeros(self.duration["bins"])
+        
