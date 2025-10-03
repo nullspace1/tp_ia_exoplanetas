@@ -3,9 +3,10 @@
     "key":"a3a642d70ff10679a66eb73c8a0333c5",
     "dataset_name": "nasa/kepler-exoplanet-search-results",
     "star_catalog_files": "resources/estrellas_cleaned.txt",
-    "positive_sample_count": 500,
-    "negative_sample_count": 1000,
-    "synthetic_sample_count": 250,
+    "positive_sample_count": 3,
+    "negative_sample_count": 3,
+    "synthetic_sample_count": 3,
+    "planets_per_synthetic_star": 1,
     "period_filter": 40,
     "distribution_params": {
         "period": {"min": 1, "max": 40,"bins": 100}

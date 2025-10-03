@@ -11,6 +11,7 @@ class Synthetics(StarDataset):
     def __init__(self, config):
         self.data_path = config["star_catalog_files"]
         self.sample_count = config["synthetic_sample_count"]
+        self.planets_per_star = config["planets_per_synthetic_star"]
         StarDataset.__init__(self, config, "synthetic")
         
     
@@ -75,8 +76,8 @@ class Synthetics(StarDataset):
         period_min = float(config["distribution_params"]["period"]["min"])
         period_max = float(config["distribution_params"]["period"]["max"])
         
-        for _ in range(self.sample_count // 4):
-            count = np.random.randint(1, 10) 
+        for _ in range(self.sample_count // self.planets_per_star):
+            count = np.random.randint(1, self.planets_per_star + 1) 
             new_exoplanets = df.sample(n=count, random_state=42).reset_index(drop=True)
             new_exoplanets["has_exoplanet"] = 1
             
