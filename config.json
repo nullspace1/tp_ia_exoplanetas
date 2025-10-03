@@ -15,7 +15,7 @@
     "lightcurve_length": 1500,
     "min_lightcurve_length": 1000,
     "positive": "data/samples/positive",
-    "negative": "data/samples/negative",
+    "negative": "data/samples/negative", 
     "synthetic": "data/samples/synthetic",
     "cache_path": "C:\\Users\\lauta\\.lightkurve\\cache\\mastDownload"
 }

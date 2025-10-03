@@ -53,6 +53,8 @@ class Synthetics(StarDataset):
         
     def download_raw_lightcurve(self,kepler_id : str):
         lightcurve = super().download_raw_lightcurve(kepler_id)
+        if lightcurve is None:
+            return None
         lightcurve_pd = lightcurve.to_pandas()
         planets = self.df[self.df["id"] == kepler_id]
         for _, row in planets.iterrows():
