@@ -9,7 +9,6 @@
     "period_filter": 40,
     "distribution_params": {
         "period": {"min": 1, "max": 40,"bins": 100},
-        "duration": {"min": 1, "max": 20, "bins": 100}
     },
     "max_period_length": 40,
     "lightcurve_length": 1500,

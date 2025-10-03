@@ -29,14 +29,11 @@ class Positives(StarDataset):
                 df = pd.read_csv(f)
 
         df["period_error"] = (df["koi_period_err1"].abs() + df["koi_period_err2"].abs()) / 2
-        df["duration_error"] = (df["koi_duration_err1"].abs() + df["koi_duration_err2"].abs()) / 2
-        df["impact_error"] = (df["koi_impact_err1"].abs() + df["koi_impact_err2"].abs()) / 2
         
-        df = df[["kepid", "koi_period","koi_duration","period_error", "duration_error"]]    
+        df = df[["kepid", "koi_period","period_error"]]    
         df.rename(columns={
             "kepid": "id",
             "koi_period": "period",
-            "koi_duration": "duration",
             "koi_disposition": "has_exoplanet"
         }, inplace=True)
 
