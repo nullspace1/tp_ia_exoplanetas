@@ -1,9 +1,11 @@
 import os
+import random
 import numpy as np
 import pandas as pd
 import lightkurve as lk
 from tqdm import tqdm
 import shutil
+import json
 
 class StarDataset:
     
@@ -13,6 +15,7 @@ class StarDataset:
     min_lightcurve_length: int
     save_path: str
     period: dict
+    segment_map: dict[str, list[int]]
     
     def __init__(self, config, path_key):
         self.df = self.get_dataset(config)
@@ -25,6 +28,11 @@ class StarDataset:
             "max": config["distribution_params"]["period"]["max"],
             "bins": config["distribution_params"]["period"]["bins"]
         }
+        self.segment_map_path = self.save_path + "/segment_map.json" 
+        if not os.path.exists(self.segment_map_path):
+            self.segment_map = {}
+        else:
+            self.segment_map = json.load(open(self.segment_map_path))
 
     def get_dataset(self, config) -> pd.DataFrame:
         pass
@@ -42,7 +50,7 @@ class StarDataset:
             weights_to_add = np.zeros(self.period["bins"])
             
             min_value = np.min((values-period_value)**2/(period_error)**2)
-            if ((min_value > 100) == np.True_ or period_error == 0):
+            if ((not np.isfinite(min_value)) or ((min_value > 100) == np.True_) or (period_error == 0)):
                 close_value = np.min(np.abs(values - period_value))
                 weights_to_add = np.exp(-(values-period_value)**2/(close_value)**2)
             else:
@@ -52,6 +60,19 @@ class StarDataset:
             weights = np.minimum(1, weights + weights_to_add)
         
         return weights
+
+    def get_segment(self, search, kepler_id):
+        if len(search)  == 1:
+            return 1
+        else:
+            if (kepler_id not in self.segment_map):
+                self.segment_map[kepler_id] = []
+            available_segments = [i for i in range(len(search)) if i not in self.segment_map[kepler_id]]
+            if len(available_segments) == 0:
+                return None
+            segment = random.choice(available_segments) 
+            self.segment_map[kepler_id].append(segment)
+            return segment  
     
     def download_raw_lightcurve(self, kepler_id : str) -> lk.lightcurve.LightCurve | None:
         search = lk.search_lightcurve(
@@ -62,7 +83,9 @@ class StarDataset:
         )
         if len(search) == 0:
             return None
-        segment = np.random.randint(0, len(search))
+        segment = self.get_segment(search, kepler_id)
+        if segment is None:
+            return None
         subset = search[segment: segment + 1]
         try:
             lightcurve = subset.download_all(flux_column="pdcsap_flux", quality_bitmask="hard")[0]
@@ -94,7 +117,7 @@ class StarDataset:
     
     def save_array(self,kepler_id : str, data : tuple):
         os.makedirs(self.save_path, exist_ok=True)
-        base_path = f"{self.save_path}/{kepler_id}.npz"
+        base_path = f"{self.save_path}/{kepler_id}_{self.segment_map[kepler_id][-1]}.npz"
         np.savez(base_path, *data)
         
     def clean_cache(self) -> None:
@@ -116,7 +139,7 @@ class StarDataset:
     
     def download_data(self) -> None:
         
-        kepler_ids = self.df["id"].sample(n=self.sample_count, random_state=42).tolist()
+        kepler_ids = self.df["id"].sample(n=self.sample_count, replace=True, random_state=42).tolist()
         
         kepler_ids_to_process = []
         for kepler_id in kepler_ids:
@@ -135,12 +158,15 @@ class StarDataset:
                 continue
             lightcurve_array = self.lightcurve_to_numpy(lightcurve)
             period_distribution = self.get_period_distribution(kepler_id)
-            self.save_array(f"{kepler_id}", (lightcurve_array, period_distribution))
+            self.save_array(kepler_id, (lightcurve_array, period_distribution))
             successful_downloads += 1
             download_count += 1
             if download_count % 20 == 0:
                 self.clean_cache()
                 download_count = 0
+        
+        self.clean_cache()
+        json.dump(self.segment_map, open(self.segment_map_path, "w"))
         
         print(f"Successfully downloaded {successful_downloads} lightcurves.")
             
