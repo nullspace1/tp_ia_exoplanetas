@@ -50,8 +50,8 @@ class Synthetics(StarDataset):
 
         return data
         
-    def download_raw_lightcurve(self,kepler_id : str):
-        lightcurve = super().download_raw_lightcurve(kepler_id)
+    def get_raw_lightcurve(self,kepler_id : str):
+        lightcurve = super().get_raw_lightcurve(kepler_id)
         if lightcurve is None:
             return None
         lightcurve_pd = lightcurve.to_pandas()
