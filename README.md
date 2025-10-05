@@ -1,15 +1,17 @@
-# Exoplanet Detection Dataset Builder
+# Exoplanet Detection Model
 
-A comprehensive Python toolkit for building machine learning datasets from Kepler exoplanet data, including real confirmed exoplanets, negative samples, and synthetic transit injections.
+The purpose of this model is to detect exoplanets in lightcurves. This is done by estimating the period of transits based on the provided lightcurve data. 
+
+The model is to be trained using the datasets to estimate the most likely periods of exoplanet transits. This model can then be used in conjunction with other machine learning models to detect exoplanets in lightcurves, or using the predictions to phase fold the lightcurve data and verify the presence of exoplanets on that period.
+
+The model output is a $d$-dimensional vector where each element corresponds to a different period. The period represented for each entry depends on the configuration parameters used to generate the dataset.
 
 ## Features
 
 - **Real Exoplanet Data**: Downloads and processes confirmed exoplanets from NASA's Kepler dataset
 - **Negative Samples**: Generates samples from stars without confirmed exoplanets
 - **Synthetic Transits**: Creates artificial exoplanet transits using realistic transit modeling
-- **Progress Tracking**: Visual progress bars and comprehensive logging
-- **Data Visualization**: Built-in tools for inspecting and analyzing generated datasets
-- **Modular Design**: Clean object-oriented architecture with reusable components
+- **Modular Design**: Clean object-oriented architecture with reusable components for data generation and training.
 
 ## Project Structure
 
@@ -65,8 +67,7 @@ Edit `config.json` to set your parameters:
     "period_filter": 40,
     "valid_lightcurve_lenght_threshold": 1000,
     "distribution_params": {
-        "period": {"min": 1, "max": 40, "bins": 100},
-        "duration": {"min": 1, "max": 20, "bins": 100}
+        "period": {"min": 1, "max": 40, "bins": 100}
     },
     "lightcurve_length": 1500,
     "min_lightcurve_length": 1000,
@@ -157,53 +158,19 @@ This project currently focuses on dataset generation. The next major step is to 
 - **Model Deployment**: Create inference pipeline for new lightcurve data
 - **Performance Optimization**: Optimize training speed and memory usage
 
-The dataset generation is complete and ready for model training.
+The dataset generation is complete and ready for model training (I think, lol).
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Permission Errors on Windows:**
-- The cache cleanup handles Windows file locking automatically
-- If issues persist, manually clear `~/.lightkurve/cache/`
+**Download Time:**
 
-**Memory Issues:**
-- Reduce `sample_count` parameters in config.json
-- Process datasets individually instead of all at once
-
-**Download Failures:**
-- Check Kaggle API credentials in config.json
-- Ensure internet connection is stable
-- Verify lightkurve cache permissions
-
-### Performance Tips
-
-- **Parallel Processing**: Run different dataset types simultaneously
-- **Incremental Generation**: Resume interrupted downloads automatically
-- **Cache Management**: Automatic cleanup every 20 downloads
-- **Progress Tracking**: Visual progress bars for long operations
-
-## Dependencies
-
-- **numpy**: Numerical computing
-- **pandas**: Data manipulation
-- **lightkurve**: Kepler data access
-- **batman-package**: Transit modeling
-- **kagglehub**: Dataset downloads
-- **tqdm**: Progress bars
-- **torch**: Deep learning (for model training)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+The current download script is *fucking slow*. The root cause is the lightkurve API. They are going to send me a SWAT team if I keep hitting their API.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the "I don't care" license. Just send me a message if you want to work on this.
 
 ## Acknowledgments
 
@@ -212,7 +179,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Batman Transit Modeling**: For realistic transit simulations
 - **Kaggle**: For hosting the Kepler dataset
 
----
 
-This project provides a solid foundation for exoplanet detection research. The dataset generation pipeline is complete and ready for machine learning model development.
 
