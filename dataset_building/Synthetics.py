@@ -81,7 +81,7 @@ class Synthetics(StarDataset):
             new_exoplanets = df.sample(n=count, random_state=42).reset_index(drop=True)
             new_exoplanets["has_exoplanet"] = 1
             
-            periods_days = - np.random.uniform(period_min, period_max, count)
+            periods_days = np.random.uniform(period_min, period_max, count)
             new_exoplanets["period"] = periods_days
             
 
