@@ -7,6 +7,7 @@ class Negatives(StarDataset):
         self.data_path = config["star_catalog_files"]
         self.sample_count = config["negative_sample_count"]
         StarDataset.__init__(self,config,"negative") 
+        self.download_path = self.download_path + "negatives/"
         
     def get_dataset(self, config) -> pd.DataFrame:
         df = pd.read_csv(self.data_path, sep="|", header=0)

@@ -13,3 +13,14 @@ class Model(nn.Module):
         x = self.encoder(x)
         period = self.processor(x)
         return period
+    
+    def param_count(self):
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+    
+    
+if __name__ == "__main__":
+    input_size = 1500
+    embedding_dim = 100
+    period_bins = 100
+    model = Model(input_size, embedding_dim, period_bins)
+    print(model.param_count())

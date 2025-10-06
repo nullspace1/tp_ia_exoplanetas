@@ -14,6 +14,7 @@ class Positives(StarDataset):
         self.period_filter = config["max_period_length"]
         StarDataset.__init__(self,config,"positive")
         self.sample_count = config["positive_sample_count"]
+        self.download_path = self.download_path + "positive/"
           
     def get_dataset(self, config) -> pd.DataFrame:
         os.environ["KAGGLE_USERNAME"] = config["username"]
@@ -29,6 +30,8 @@ class Positives(StarDataset):
                 df = pd.read_csv(f)
 
         df["period_error"] = (df["koi_period_err1"].abs() + df["koi_period_err2"].abs()) / 2
+        
+        df = df[df["koi_disposition"] == "CONFIRMED"]
         
         df = df[["kepid", "koi_period","period_error"]]    
         df.rename(columns={

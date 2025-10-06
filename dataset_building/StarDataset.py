@@ -1,6 +1,8 @@
 import os
 import random
+import uuid
 from flask import request
+from matplotlib.style import available
 import numpy as np
 import pandas as pd
 import lightkurve as lk
@@ -15,12 +17,12 @@ from astropy.io import fits
 class StarDataset:
     
     df : pd.DataFrame
-    sample_count: int
+    download_count: int
     lightcurve_length: int
     min_lightcurve_length: int
     save_path: str
     period: dict
-    segment_map: dict[str, list[int]]
+    sample_count : int
     
     def __init__(self, config, path_key):
         self.df = self.get_dataset(config)
@@ -34,11 +36,7 @@ class StarDataset:
             "max": config["distribution_params"]["period"]["max"],
             "bins": config["distribution_params"]["period"]["bins"]
         }
-        self.segment_map_path = self.save_path + "/segment_map.json" 
-        if not os.path.exists(self.segment_map_path):
-            self.segment_map = {}
-        else:
-            self.segment_map = json.load(open(self.segment_map_path))
+        self.download_count = config["download_count"]
         if not os.path.exists(self.download_path):
             os.makedirs(self.download_path)
 
@@ -69,31 +67,34 @@ class StarDataset:
         
         return weights
 
-    def get_segment(self, files, kepler_id):
-        if len(files)  == 1:
-            return 1
-        else:
-            if (kepler_id not in self.segment_map):
-                self.segment_map[kepler_id] = []
-            available_segments = [i for i in range(len(files)) if i not in self.segment_map[kepler_id]]
-            if len(available_segments) == 0:
-                return None
-            segment = random.choice(available_segments) 
-            self.segment_map[kepler_id].append(segment)
-            return segment  
+
     
     def get_raw_lightcurve(self, kepler_id : str) -> lk.lightcurve.LightCurve | None:
-        id = f"kplr0{kepler_id}"
-        files = [f for f in os.listdir(self.download_path) if f.startswith(id)]
-        segment = self.get_segment(files, kepler_id)
-        if segment is None:
+        prefix = f"kplr0{kepler_id}"
+        files = [f for f in os.listdir(self.download_path) if f.startswith(prefix)]
+        if not files:
             return None
-        file = files[segment]
-        table  = fits.open(f"{self.download_path}/{file}")[1].data
-        time = table["TIME"][~np.isnan(table["TIME"])]
-        flux = table["PDCSAP_FLUX"][~np.isnan(table["TIME"])]   
-        lightcurve = lk.LightCurve(time=time, flux=flux)
-        return lightcurve.remove_nans().remove_outliers().normalize()
+
+        file = random.choice(files)
+        try:
+            table = fits.open(f"{self.download_path}/{file}", memmap=False)[1].data
+        except Exception as e:
+            print(f"[WARN] Failed to load {file}: {e}")
+            return None
+        valid_mask = ~np.isnan(table["TIME"]) & ~np.isnan(table["PDCSAP_FLUX"])
+
+        time = table["TIME"][valid_mask]
+        flux = table["PDCSAP_FLUX"][valid_mask]
+
+        if len(time) < self.lightcurve_length:
+            return None
+
+        start = np.random.randint(0, len(time) - self.lightcurve_length)
+        time = time[start:start + self.lightcurve_length]
+        flux = flux[start:start + self.lightcurve_length]
+
+        lc = lk.LightCurve(time=time, flux=flux)
+        return lc.remove_nans().remove_outliers().normalize()
     
     
     def lightcurve_to_numpy(self, lightcurve : lk.lightcurve.LightCurve) -> np.ndarray:
@@ -105,7 +106,8 @@ class StarDataset:
 
         t0 = time.min()
         available_indices = np.floor((time - t0) / median_time_diff).astype(np.int64)
-        np.clip(available_indices, 0, self.lightcurve_length - 1, out=available_indices)
+        
+        available_indices = np.clip(available_indices, 0, self.lightcurve_length - 1)
 
         flux[available_indices] = flux_in
 
@@ -115,7 +117,7 @@ class StarDataset:
     
     def save_array(self,kepler_id : str, data : tuple):
         os.makedirs(self.save_path, exist_ok=True)
-        base_path = f"{self.save_path}/{kepler_id}_{self.segment_map[kepler_id][-1]}.npz"
+        base_path = f"{self.save_path}/{kepler_id}_{uuid.uuid4()}.npz"
         np.savez(base_path, *data)
         
     def clean_cache(self) -> None:
@@ -135,6 +137,9 @@ class StarDataset:
             pass
             
     def download_all_curves(self, kepler_ids : list[str]) -> None:
+        
+                
+        print(f"Downloading {len(kepler_ids)} lightcurves...")    
         
         obs : list[requests.Response] = Observations.query_criteria(
             obs_collection="Kepler",
@@ -158,22 +163,28 @@ class StarDataset:
             flat=True
         )
     
+    def get_already_downloaded_ids(self) -> list[str]:
+        downloaded_ids = set(int(os.path.splitext(os.path.basename(x))[0].split("-")[0].lstrip("kplr").lstrip("0")) for x in os.listdir(self.download_path))
+        return [x for x in downloaded_ids if x in self.df["id"].values]
+    
     def download_data(self) -> None:
         
-        kepler_ids = self.df["id"].sample(n=self.sample_count, replace=True, random_state=42).tolist()
+        already_downloaded_ids = self.get_already_downloaded_ids()
+
+        mask = self.df["id"].isin(already_downloaded_ids)
+        remaining = self.df.loc[~mask, "id"]
+
+        n = max(self.download_count - len(already_downloaded_ids), 0)
+        sampled_ids = remaining.sample(n=n, random_state=42).tolist() if n > 0 else []
+
+        kepler_ids = already_downloaded_ids + sampled_ids
+         
+        if n > 0:        
+            self.download_all_curves(sampled_ids)
         
-        kepler_ids_to_process = []
+        kepler_ids = random.choices(kepler_ids, k=self.sample_count)
         
-        for kepler_id in kepler_ids:
-            file_path = f"{self.save_path}/{kepler_id}.npz"
-            if not os.path.exists(file_path):
-                kepler_ids_to_process.append(kepler_id)
-        
-        print(f"Downloading {len(kepler_ids_to_process)} lightcurves...")
-        
-        self.download_all_curves(kepler_ids_to_process)
-        
-        for kepler_id in tqdm(kepler_ids_to_process, desc="Processing Lightcurves", unit="file"):
+        for kepler_id in tqdm(kepler_ids, desc="Processing Lightcurves", unit="file"):
             lightcurve = self.get_raw_lightcurve(kepler_id)
             if lightcurve is None:
                 continue
