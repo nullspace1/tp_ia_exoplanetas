@@ -20,8 +20,8 @@ class ParameterEstimator(nn.Module):
     
     
 if __name__ == "__main__":
-    model = ParameterEstimator(100, 100)
-    x = torch.randn(1, 100)
+    model = ParameterEstimator(256, 100)
+    x = torch.randn(188, 256)
     y = model(x)
     print(y[0].shape)
     print(y[1].shape)

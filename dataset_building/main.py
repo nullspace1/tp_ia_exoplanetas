@@ -14,13 +14,13 @@ def main():
     
     config = json.load(open("config.json"))
     
-    positives_dataset = Positives(config)
+    ##positives_dataset = Positives(config)
     negatives_dataset = Negatives(config)
-    ## synthetics_dataset = Synthetics(config)
+   ## synthetics_dataset = Synthetics(config)
 
-   ## synthetics_dataset.download_data()
+    ##synthetics_dataset.download_data()
     negatives_dataset.download_data()
-    positives_dataset.download_data()
+    ##positives_dataset.download_data()
     
 
 if __name__ == "__main__":
