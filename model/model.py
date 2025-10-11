@@ -49,7 +49,7 @@ class Model(pl.LightningModule):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
     
 if __name__ == "__main__":
-    model = Model(3000, 256, 100)
+    model = Model(3000, 128, 100)
     x = torch.randn(1, 3000)
     y = model(x)
     print(y.shape)

@@ -18,7 +18,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=32, shuffle=False)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=False)
 
-model = Model(3000, 256, 101)
+model = Model(3000, 128, 101)
 
 trainer = pl.Trainer(max_epochs=10)
 
