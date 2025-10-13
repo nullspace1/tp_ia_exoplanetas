@@ -1,0 +1,24 @@
+{
+    "username":"lmoiano",
+    "key":"a3a642d70ff10679a66eb73c8a0333c5",
+    "dataset_name": "nasa/kepler-exoplanet-search-results",
+    "star_catalog_files": "resources/estrellas_cleaned.txt",
+    "positive_sample_count": 15000,
+    "negative_sample_count": 30000,
+    "synthetic_sample_count": 15000,
+    "download_count": 250,
+    "planets_per_synthetic_star": 5,
+    "period_filter": 40,
+    "distribution_params": {
+        "period": {"min": 1, "max": 40,"bins": 10},
+        "planet_radius": {"min": 1, "max": 4}
+    },
+   
+    "max_period_length": 40,
+    "lightcurve_length": 3000,
+    "min_lightcurve_length": 2500,
+    "positive": "data/samples/positive",
+    "negative": "data/samples/negative", 
+    "synthetic": "data/samples/synthetic",
+    "cache_path": "C:\\Users\\lauta\\.lightkurve\\cache\\mastDownload"
+}

@@ -1,0 +1,33 @@
+# Core scientific computing
+numpy>=1.21.0
+pandas>=1.3.0
+
+# Astronomy and exoplanet analysis
+lightkurve>=2.0.0
+batman-package>=2.4.0
+
+# Data download and management
+kagglehub>=0.2.0
+pytorch_tcn
+
+# Progress bars and utilities
+tqdm>=4.60.0
+
+# Deep learning (PyTorch)
+torch>=1.9.0
+torchvision>=0.10.0
+
+pytorch_lightning
+pytorch_tcn
+
+# Standard library dependencies (usually included with Python)
+# os, json, zipfile, shutil, math - built-in modules
+# turtle - built-in module (though unusual import in main.py)
+
+# Data visualization
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Scientific computing and machine learning metrics
+scipy>=1.7.0
+scikit-learn>=1.0.0
